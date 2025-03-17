@@ -1,0 +1,7 @@
+# Ignorar archivos .env
+*.env
+
+# Ignorar imágenes
+*.png
+*.jpg
+*.jpeg

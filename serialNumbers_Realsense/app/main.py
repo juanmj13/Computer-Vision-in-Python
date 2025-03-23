@@ -21,7 +21,7 @@ def obtener_numeros_serie():
         mensaje = f"{timestamp} - No hay cámaras Intel RealSense conectadas."
         print(mensaje)
         sys.stdout.flush()  # Forzar el flush para asegurarse que el mensaje se imprima
-        sys.exit(1)
+        raise RuntimeError("No hay cámaras conectadas.")
     else:
         for i, dispositivo in enumerate(dispositivos):
             numero_serie = dispositivo.get_info(rs.camera_info.serial_number)
@@ -41,4 +41,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error inesperado: {e}")
         sys.stdout.flush()  # Asegúrate de que este error también se imprima inmediatamente
-        sys.exit(1)
+        raise RuntimeError("Error inesperado")

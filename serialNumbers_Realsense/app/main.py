@@ -21,6 +21,7 @@ def obtener_numeros_serie():
         mensaje = f"{timestamp} - No hay cámaras Intel RealSense conectadas."
         print(mensaje)
         sys.stdout.flush()  # Forzar el flush para asegurarse que el mensaje se imprima
+        sys.exit(1)
     else:
         for i, dispositivo in enumerate(dispositivos):
             numero_serie = dispositivo.get_info(rs.camera_info.serial_number)

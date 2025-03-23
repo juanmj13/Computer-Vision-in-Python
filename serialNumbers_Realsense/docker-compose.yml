@@ -1,0 +1,12 @@
+services:
+  realsense_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: realsense_service
+    restart: always  # Reiniciar si el contenedor crashea
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"  # Permitir acceso a dispositivos USB
+    privileged: true  # Otorgar permisos avanzados para acceder al hardware
+    environment:
+      - INTERVALO_REVISION=5

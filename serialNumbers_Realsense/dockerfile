@@ -1,0 +1,19 @@
+# Usa la imagen base de Python
+FROM python:3.11-slim
+
+# Instalar las dependencias del sistema necesarias (libusb)
+RUN apt-get update && apt-get install -y libusb-1.0-0-dev
+
+
+# Establece el directorio de trabajo
+WORKDIR /app
+
+# Copia los archivos necesarios en el contenedor
+COPY ./app /app
+COPY requirements.txt /app/requirements.txt
+
+# Instala las dependencias de Python
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+# Define el comando de inicio (si se necesita ejecutar algo automáticamente)
+CMD ["python", "main.py"]  

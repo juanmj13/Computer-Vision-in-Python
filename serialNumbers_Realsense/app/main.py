@@ -40,3 +40,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error inesperado: {e}")
         sys.stdout.flush()  # Asegúrate de que este error también se imprima inmediatamente
+        sys.exit(1)

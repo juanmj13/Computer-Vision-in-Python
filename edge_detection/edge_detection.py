@@ -40,14 +40,20 @@ num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(edges_er
 areas = stats[1:, cv2.CC_STAT_AREA]
 largest_indices = np.argsort(areas)[-3:] + 1  # Get indices of the 3 largest components
 
-# Create an output image to visualize the 3 largest neighborhoods
-output_image = np.zeros_like(image)
+# Create a copy of the original image to draw the neighborhoods on top
+output_image = image.copy()
 
 # Draw the 3 largest neighborhoods and mark their centroids
 for i, label in enumerate(largest_indices):
     mask = (labels == label)
-    color = np.random.randint(0, 255, size=(3,), dtype=np.uint8)  # Random color for each neighborhood
-    output_image[mask] = color
+    
+    # Create a colored mask with the same shape as the image
+    color = np.random.randint(0, 255, size=(1, 1, 3), dtype=np.uint8)  # Random color for each neighborhood
+    colored_mask = np.zeros_like(output_image, dtype=np.uint8)
+    colored_mask[mask] = color
+
+    # Blend the original image with the colored mask
+    output_image = cv2.addWeighted(output_image, 1, colored_mask, 0.5, 0)
 
     # Get the centroid coordinates
     center_x, center_y = int(centroids[label][0]), int(centroids[label][1])
@@ -56,22 +62,13 @@ for i, label in enumerate(largest_indices):
     cv2.line(output_image, (center_x - 5, center_y - 5), (center_x + 5, center_y + 5), (0, 0, 255), 2)  # Diagonal line 1
     cv2.line(output_image, (center_x + 5, center_y - 5), (center_x - 5, center_y + 5), (0, 0, 255), 2)  # Diagonal line 2
 
-# Show the original image and the image with neighborhoods and centroids
-plt.figure(figsize=(10, 5))
-
-# Show the original image
-plt.subplot(1, 2, 1)
-plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))  # Convert from BGR to RGB for matplotlib
-plt.title('Original Image')
-plt.axis('off')
-
-# Show the image with neighborhoods and centroids
-plt.subplot(1, 2, 2)
+# Show only the image with neighborhoods and centroids
+plt.figure(figsize=(8, 8))
 plt.imshow(cv2.cvtColor(output_image, cv2.COLOR_BGR2RGB))  # Convert from BGR to RGB for matplotlib
 plt.title('Top 3 Neighborhoods with Centroids')
 plt.axis('off')
 
-# Display the images
+# Display the image
 plt.show()
 
 # Save the output image with centroids marked

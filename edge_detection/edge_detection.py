@@ -2,6 +2,7 @@ import cv2
 import os
 from dotenv import load_dotenv
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -19,45 +20,58 @@ if not os.path.exists(image_path):
     print("The image path is not valid. Please ensure the path is correct.")
     exit()
 
-# Load the image in color (to draw on it in blue)
+# Load the image in color
 image = cv2.imread(image_path)
 
-# Perform edge detection using the Canny algorithm with adjustable border thickness
+# Perform edge detection using the Canny algorithm
 edges = cv2.Canny(image, lower_threshold, upper_threshold)
 
 # Create a dilation kernel to control the thickness of the edges
 kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (border_thickness * 2 + 1, border_thickness * 2 + 1))
 
-# Dilate the edges to make them thicker
+# Dilate and then Erode to separate neighborhoods
 edges_dilated = cv2.dilate(edges, kernel)
+edges_eroded = cv2.erode(edges_dilated, kernel)  # Erode to break small connections
 
-# Convert the dilated edges to a 3-channel (BGR) image to draw in color
-edges_colored = cv2.cvtColor(edges_dilated, cv2.COLOR_GRAY2BGR)
+# Find connected components to identify individual neighborhoods
+num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(edges_eroded)
 
-# Create a mask to apply to the original image
-# The edges will be blue, so we modify the values in the corresponding channels
-image_with_edges = image.copy()
-image_with_edges[edges_dilated != 0] = [255, 0, 0]  # Blue in BGR format
+# Get the areas of all components (excluding the background)
+areas = stats[1:, cv2.CC_STAT_AREA]
+largest_indices = np.argsort(areas)[-3:] + 1  # Get indices of the 3 largest components
 
-# Show the original image and the image with blue edges
-plt.figure(figsize=(10, 5))
+# Create a copy of the original image to draw the neighborhoods on top
+output_image = image.copy()
 
-# Show the original image
-plt.subplot(1, 2, 1)
-plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))  # Convert from BGR to RGB for matplotlib
-plt.title('Original Image')
+# Draw the 3 largest neighborhoods and mark their centroids
+for i, label in enumerate(largest_indices):
+    mask = (labels == label)
+    
+    # Create a colored mask with the same shape as the image
+    color = np.random.randint(0, 255, size=(1, 1, 3), dtype=np.uint8)  # Random color for each neighborhood
+    colored_mask = np.zeros_like(output_image, dtype=np.uint8)
+    colored_mask[mask] = color
+
+    # Blend the original image with the colored mask
+    output_image = cv2.addWeighted(output_image, 1, colored_mask, 0.5, 0)
+
+    # Get the centroid coordinates
+    center_x, center_y = int(centroids[label][0]), int(centroids[label][1])
+
+    # Draw an "X" at the centroid
+    cv2.line(output_image, (center_x - 5, center_y - 5), (center_x + 5, center_y + 5), (0, 0, 255), 2)  # Diagonal line 1
+    cv2.line(output_image, (center_x + 5, center_y - 5), (center_x - 5, center_y + 5), (0, 0, 255), 2)  # Diagonal line 2
+
+# Show only the image with neighborhoods and centroids
+plt.figure(figsize=(8, 8))
+plt.imshow(cv2.cvtColor(output_image, cv2.COLOR_BGR2RGB))  # Convert from BGR to RGB for matplotlib
+plt.title('Top 3 Neighborhoods with Centroids')
 plt.axis('off')
 
-# Show the image with blue edges
-plt.subplot(1, 2, 2)
-plt.imshow(cv2.cvtColor(image_with_edges, cv2.COLOR_BGR2RGB))  # Convert from BGR to RGB for matplotlib
-plt.title('Image with Blue Edges')
-plt.axis('off')
-
-# Display the images
+# Display the image
 plt.show()
 
-# Save the image with blue edges
-output_path = "edges_output_with_blue.jpg"
-cv2.imwrite(output_path, image_with_edges)
-print(f"Image with blue edges saved as {output_path}")
+# Save the output image with centroids marked
+output_path = "top_3_neighborhoods_with_centroids.jpg"
+cv2.imwrite(output_path, output_image)
+print(f"Image with the 3 largest neighborhoods and centroids saved as {output_path}")

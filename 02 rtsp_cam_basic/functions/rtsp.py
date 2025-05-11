@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 import numpy as np
 from datetime import datetime
 import os
+import time
 
 
 def liveCam(rtsp_url: str, width: int, height: int, user: str, password: str):
@@ -38,7 +39,7 @@ def liveCam(rtsp_url: str, width: int, height: int, user: str, password: str):
             TakePhoto(frame)
 
     cap.release()
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
 
 
 def discovery(ip: str, port: int, user: str, password: str) -> str:
@@ -137,7 +138,7 @@ def movementDetectionBasic(rtsp_url: str, width: int, height: int, user: str, pa
             TakePhoto(frame)
 
     cap.release()
-    cv2.destroyAllWindows()
+    #cv2.destroyAllWindows()
 
 
 def trackingColor(rtsp_url: str, width: int, height: int, user: str, password: str,
@@ -184,7 +185,7 @@ def trackingColor(rtsp_url: str, width: int, height: int, user: str, password: s
             TakePhoto(frame)
 
     cap.release()
-    cv2.destroyAllWindows()
+    #cv2.destroyAllWindows()
 
 def TakePhoto(frame, folder='photos'):
     """
@@ -201,3 +202,49 @@ def TakePhoto(frame, folder='photos'):
     filename = os.path.join(folder, f"photo_{timestamp}.jpg")
     cv2.imwrite(filename, frame)
     print(f"[INFO] Foto guardada: {filename}")
+
+
+
+import os
+import time
+import cv2
+from urllib.parse import urlparse
+
+def timingPhoto(rtsp_url: str, width: int, height: int, user: str, password: str, interval: int, output_dir: str):
+    # Insertar user:password en la URL RTSP
+    parsed = urlparse(rtsp_url)
+
+    if parsed.username is None and parsed.password is None:
+        netloc = f"{user}:{password}@{parsed.hostname}"
+        if parsed.port:
+            netloc += f":{parsed.port}"
+        rtsp_url = parsed._replace(netloc=netloc).geturl()
+
+    cap = cv2.VideoCapture(rtsp_url, cv2.CAP_FFMPEG)
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 4)      # Establecer tamaño del buffer
+
+
+    if not cap.isOpened():
+        print("[ERROR] Error streaming video")
+        return
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    last_saved = time.time()
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("[WARNING] Error reading frame. Retrying...")
+            time.sleep(1)
+            continue
+
+        now = time.time()
+        if now - last_saved >= interval:
+            frame_resized = cv2.resize(frame, (width, height))
+            filename = datetime.now().strftime("%Y%m%d_%H%M%S.jpg")
+            filepath = os.path.join(output_dir, filename)
+            cv2.imwrite(filepath, frame_resized)
+            print(f"[INFO] Saved frame to: {filepath}")
+            last_saved = now

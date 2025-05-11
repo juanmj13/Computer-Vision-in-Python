@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  cam1:
+    build: .
+    container_name: cam1_capture
+    env_file: .env.cam1
+    volumes:
+      - ./photos/cam1:/photos/cam1
+    restart: always
+
+
+
+    
+

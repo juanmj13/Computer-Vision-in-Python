@@ -1,25 +1,18 @@
-from functions import discovery, liveCam, movementDetectionBasic, trackingColor
+from functions import timingPhoto
 from dotenv import load_dotenv
 import os
 
-# Cargar variables de entorno desde .env
 load_dotenv()
 
-# Parámetros de la cámara desde .env
 ip = os.getenv("CAMERA_IP")
 port = int(os.getenv("CAMERA_PORT"))
 user = os.getenv("CAMERA_USER")
 password = os.getenv("CAMERA_PASSWORD")
+interval = int(os.getenv("PHOTO_INTERVAL", 30))
+output_dir = os.getenv("PHOTO_OUTPUT_DIR", "./photos")
 
-# Obtener RTSP URL
+from functions import discovery
 rtsp_url = discovery(ip, port, user, password)
 
-# Amarillo en HSV
-lower_yellow = (20, 100, 100)
-upper_yellow = (30, 255, 255)
-
-
 if rtsp_url:
-    liveCam(rtsp_url, 640, 480, user, password)
-    # movementDetectionBasic(rtsp_url, 640, 480, user, password, 5)
-    # trackingColor(rtsp_url, 640, 480, user, password, lower_yellow, upper_yellow)
+    timingPhoto(rtsp_url, 640, 480, user, password, interval, output_dir)

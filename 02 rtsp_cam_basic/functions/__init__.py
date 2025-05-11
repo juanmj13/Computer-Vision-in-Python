@@ -1,1 +1,1 @@
-from .rtsp import liveCam, discovery, movementDetectionBasic, trackingColor
+from .rtsp import liveCam, discovery, movementDetectionBasic, trackingColor, timingPhoto

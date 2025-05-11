@@ -5,3 +5,7 @@
 *.png
 *.jpg
 *.jpeg
+*.webp
+
+*.pyc
+__pycache__/
